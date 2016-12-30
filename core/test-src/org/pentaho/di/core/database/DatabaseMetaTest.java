@@ -41,6 +41,7 @@ import org.pentaho.di.core.row.RowMeta;
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.core.row.ValueMetaInterface;
 import org.pentaho.di.core.row.value.ValueMetaNone;
+import org.pentaho.di.core.row.value.ValueMetaPluginType;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -60,10 +61,6 @@ public class DatabaseMetaTest {
   private static final String DROP_STATEMENT = "dropStatement";
   private static final String DROP_STATEMENT_FALLBACK = "DROP TABLE IF EXISTS " + TABLE_NAME;
 
-  private static final String CONNECTION_TYPE_ID_MSSQL = "MSSQL";
-  private static final String CONNECTION_TYPE_ID_MSSQL_NATIVE = "MSSQLNATIVE";
-  private static final String CONNECTION_TYPE_ID_ORACLE = "ORACLE";
-
   private DatabaseMeta databaseMeta;
   private DatabaseInterface databaseInterface;
 
@@ -71,6 +68,7 @@ public class DatabaseMetaTest {
   public static void setUpOnce() throws KettlePluginException {
     // Register Natives to create a default DatabaseMeta
     DatabasePluginType.getInstance().searchPlugins();
+    ValueMetaPluginType.getInstance().searchPlugins();
   }
 
   @Before
@@ -329,5 +327,24 @@ public class DatabaseMetaTest {
     when( meta.isPartitioned() ).thenReturn( false );
     when( meta.checkParameters() ).thenCallRealMethod();
     assertEquals( 2, meta.checkParameters().length );
+  }
+
+  @Test
+  public void setSQLServerInstanceTest() {
+    DatabaseMeta dbmeta = new DatabaseMeta();
+    DatabaseInterface mssqlServerDatabaseMeta =  new MSSQLServerDatabaseMeta();
+    mssqlServerDatabaseMeta.setPluginId( "MSSQL" );
+    DatabaseInterface mssqlServerNativeDatabaseMeta =  new MSSQLServerNativeDatabaseMeta();
+    mssqlServerNativeDatabaseMeta.setPluginId( "MSSQLNATIVE" );
+    dbmeta.setDatabaseInterface( mssqlServerDatabaseMeta );
+    dbmeta.setSQLServerInstance( "" );
+    assertEquals( dbmeta.getSQLServerInstance(), null );
+    dbmeta.setSQLServerInstance( "instance1" );
+    assertEquals( dbmeta.getSQLServerInstance(), "instance1" );
+    dbmeta.setDatabaseInterface( mssqlServerNativeDatabaseMeta );
+    dbmeta.setSQLServerInstance( "" );
+    assertEquals( dbmeta.getSQLServerInstance(), null );
+    dbmeta.setSQLServerInstance( "instance1" );
+    assertEquals( dbmeta.getSQLServerInstance(), "instance1" );
   }
 }
