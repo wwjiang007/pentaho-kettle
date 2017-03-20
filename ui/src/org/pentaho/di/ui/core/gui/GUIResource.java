@@ -3,7 +3,7 @@
  *
  * Pentaho Data Integration
  *
- * Copyright (C) 2002-2016 by Pentaho : http://www.pentaho.com
+ * Copyright (C) 2002-2017 by Pentaho : http://www.pentaho.com
  *
  *******************************************************************************
  *
@@ -201,6 +201,8 @@ public class GUIResource {
 
   private SwtUniversalImage imageSlave;
 
+  private SwtUniversalImage imageSlaveTree;
+
   private SwtUniversalImage imageArrow;
 
   private SwtUniversalImage imageFolder;
@@ -304,6 +306,8 @@ public class GUIResource {
   private SwtUniversalImage imageCollapseAll;
 
   private SwtUniversalImage imageStepError;
+
+  private SwtUniversalImage imageRedStepError;
 
   private SwtUniversalImage imageCopyHop;
 
@@ -567,6 +571,7 @@ public class GUIResource {
       imageCalendar.dispose();
       imageCluster.dispose();
       imageSlave.dispose();
+      imageSlaveTree.dispose();
       imageArrow.dispose();
       imageFolder.dispose();
       imageTransRepo.dispose();
@@ -593,6 +598,7 @@ public class GUIResource {
       imageHideResults.dispose();
       imageCollapseAll.dispose();
       imageStepError.dispose();
+      imageRedStepError.dispose();
       imageCopyHop.dispose();
       imageErrorHop.dispose();
       imageInfoHop.dispose();
@@ -861,6 +867,9 @@ public class GUIResource {
     // , "ui/images/slave.png"
     imageSlave = SwtSvgImageUtil.getImageAsResource( display, BasePropertyHandler.getProperty( "Slave_image" ) );
 
+    // , "ui/images/slave-tree.png"
+    imageSlaveTree = SwtSvgImageUtil.getImageAsResource( display, BasePropertyHandler.getProperty( "Slave_tree_image" ) );
+
     // "ui/images/logo_kettle_lrg.png"
     imageKettleLogo = loadAsResource( display, BasePropertyHandler.getProperty( "Logo_lrg_image" ), 0 );
     // "ui/images/bg_banner.png"
@@ -1000,6 +1009,10 @@ public class GUIResource {
     // "ui/images/show-error-lines.png;
     imageStepError =
       SwtSvgImageUtil.getImageAsResource( display, BasePropertyHandler.getProperty( "StepErrorLines_image" ) );
+
+    // "ui/images/step-error.svg;
+    imageRedStepError =
+        SwtSvgImageUtil.getImageAsResource( display, BasePropertyHandler.getProperty( "StepErrorLinesRed_image" ) );
 
     // "ui/images/copy-hop.png;
     imageCopyHop = SwtSvgImageUtil.getImageAsResource( display, BasePropertyHandler.getProperty( "CopyHop_image" ) );
@@ -1453,6 +1466,20 @@ public class GUIResource {
    */
   public Image getImageSlaveMedium() {
     return imageSlave.getAsBitmapForSize( display, ConstUI.MEDIUM_ICON_SIZE, ConstUI.MEDIUM_ICON_SIZE );
+  }
+
+  /**
+   * @return Returns the imageSlaveTree.
+   */
+  public Image getImageSlaveTree() {
+    return imageSlaveTree.getAsBitmapForSize( display, ConstUI.MEDIUM_ICON_SIZE, ConstUI.MEDIUM_ICON_SIZE );
+  }
+
+  /**
+   * @return Returns the imageSlave.
+   */
+  public Image getImageSlaveTreeMedium() {
+    return imageSlaveTree.getAsBitmapForSize( display, ConstUI.MEDIUM_ICON_SIZE, ConstUI.MEDIUM_ICON_SIZE );
   }
 
   /**
@@ -2178,6 +2205,14 @@ public class GUIResource {
 
   public SwtUniversalImage getSwtImageStepError() {
     return imageStepError;
+  }
+
+  public Image getImageRedStepError() {
+    return imageRedStepError.getAsBitmapForSize( display, ConstUI.SMALL_ICON_SIZE, ConstUI.SMALL_ICON_SIZE );
+  }
+
+  public SwtUniversalImage getSwtImageRedStepError() {
+    return imageRedStepError;
   }
 
   public Image getImageCopyHop() {

@@ -2,7 +2,7 @@
  *
  * Pentaho Data Integration
  *
- * Copyright (C) 2002-2015 by Pentaho : http://www.pentaho.com
+ * Copyright (C) 2017 by Pentaho : http://www.pentaho.com
  *
  *******************************************************************************
  *
@@ -19,29 +19,24 @@
  * limitations under the License.
  *
  ******************************************************************************/
+package org.pentaho.di.core.exception;
 
-package org.pentaho.di.ui.trans.steps.mapping;
+public class KettlePluginClassMapException extends KettlePluginException {
+  private static final long serialVersionUID = 3928198226583274564L;
 
-import org.junit.Test;
-import org.pentaho.di.core.ObjectLocationSpecificationMethod;
-import org.pentaho.di.core.exception.KettleException;
+  public KettlePluginClassMapException() {
+    super();
+  }
 
-import static org.mockito.Mockito.*;
+  public KettlePluginClassMapException( String message, Throwable cause ) {
+    super( message, cause );
+  }
 
-public class MappingDialogTest {
+  public KettlePluginClassMapException( String message ) {
+    super( message );
+  }
 
-  @Test( expected = KettleException.class )
-  public void loadTransformation() throws KettleException {
-
-    MappingDialog mappingDialog = mock( MappingDialog.class );
-
-    doCallRealMethod().when( mappingDialog ).loadTransformation();
-
-    when( mappingDialog.getReferenceObjectId() ).thenReturn( null );
-    when( mappingDialog.getSpecificationMethod() ).thenReturn(
-      ObjectLocationSpecificationMethod.REPOSITORY_BY_REFERENCE );
-
-    mappingDialog.loadTransformation();
-
+  public KettlePluginClassMapException( Throwable cause ) {
+    super( cause );
   }
 }

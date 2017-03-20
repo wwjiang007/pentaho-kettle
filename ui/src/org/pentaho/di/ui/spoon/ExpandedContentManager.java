@@ -2,7 +2,7 @@
  *
  * Pentaho Data Integration
  *
- * Copyright (C) 2002-2016 by Pentaho : http://www.pentaho.com
+ * Copyright (C) 2002-2017 by Pentaho : http://www.pentaho.com
  *
  *******************************************************************************
  *
@@ -33,6 +33,7 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.widgets.Control;
+import org.pentaho.di.core.Const;
 import org.pentaho.di.ui.spoon.trans.TransGraph;
 
 import java.util.function.Consumer;
@@ -41,6 +42,14 @@ import java.util.function.Supplier;
 public final class ExpandedContentManager {
 
   static Supplier<Spoon> spoonSupplier = Spoon::getInstance;
+
+  /**
+   * The value of the most recent URL navigated to.
+   * Storing this value is useful because in some Operating Systems the internal browser implementations used via the
+   * SWT browser widget seem to always return the same URL when a new value is set that only contains changes in its
+   * hash section.
+   */
+  static String lastNavigateURL;
 
   /**
    * isBrowserVisible
@@ -109,7 +118,7 @@ public final class ExpandedContentManager {
           if ( copyContent ) {
             Browser thisBrowser = (Browser) keyEvent.getSource();
             Clipboard clipboard = new Clipboard( thisBrowser.getDisplay() );
-            clipboard.setContents( new String[]{thisBrowser.getUrl()}, new Transfer[]{ TextTransfer.getInstance()} );
+            clipboard.setContents( new String[] { lastNavigateURL }, new Transfer[] { TextTransfer.getInstance() } );
             clipboard.dispose();
           } else if ( arrowNavigation || backslashNavigation || reloadContent || zoomContent ) {
             keyEvent.doit = false;
@@ -120,7 +129,9 @@ public final class ExpandedContentManager {
         }
       } );
     }
+
     browser.setUrl( url );
+    lastNavigateURL = url;
   }
 
   /**
@@ -149,6 +160,9 @@ public final class ExpandedContentManager {
     }
     if ( !isVisible( graph ) ) {
       maximizeExpandedContent( browser );
+    }
+    if ( Const.isOSX() && graph.isExecutionResultsPaneVisible() ) {
+      graph.extraViewComposite.setVisible( false );
     }
     browser.moveAbove( null );
     browser.getParent().layout( true );
@@ -197,8 +211,11 @@ public final class ExpandedContentManager {
    */
   public static void hideExpandedContent( TransGraph graph ) {
     doToExpandedContent( graph, browser -> {
+      if ( Const.isOSX() && graph.isExecutionResultsPaneVisible() ) {
+        graph.extraViewComposite.setVisible( true );
+      }
       browser.moveBelow( null );
-      browser.getParent().layout( true );
+      browser.getParent().layout( true, true );
       browser.getParent().redraw();
     } );
   }

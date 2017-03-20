@@ -1007,6 +1007,11 @@ public class Const {
   public static final String XML_FILE_KETTLE_LIFECYCLE_LISTENERS = "kettle-lifecycle-listeners.xml";
 
   /**
+   * The XML file that contains the list of native engines
+   */
+  public static final String XML_FILE_KETTLE_ENGINES = "kettle-engines.xml";
+
+  /**
    * the value the Pan JVM should return on exit.
    */
   public static final String KETTLE_TRANS_PAN_JVM_EXIT_CODE = "KETTLE_TRANS_PAN_JVM_EXIT_CODE";
@@ -1061,7 +1066,7 @@ public class Const {
     "KETTLE_COMPATIBILITY_SET_ERROR_ON_SPECIFIC_JOB_ENTRIES";
 
   // See PDI-15781 for details
-  public static final String KETTLE_COMPATIBILITY_SEND_RESULT_XML_WITH_STATUS = "KETTLE_COMPATIBILITY_SEND_RESULT_XML_WITH_STATUS";
+  public static final String KETTLE_COMPATIBILITY_SEND_RESULT_XML_WITH_FULL_STATUS = "KETTLE_COMPATIBILITY_SEND_RESULT_XML_WITH_FULL_STATUS";
 
   /**
    * The XML file that contains the list of native import rules

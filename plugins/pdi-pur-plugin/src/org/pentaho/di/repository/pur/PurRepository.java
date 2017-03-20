@@ -1,6 +1,6 @@
 //CHECKSTYLE:FileLength:OFF
 /*!
-* Copyright 2010 - 2016 Pentaho Corporation.  All rights reserved.
+* Copyright 2010 - 2017 Pentaho Corporation.  All rights reserved.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -55,6 +55,7 @@ import org.pentaho.di.core.extension.ExtensionPointHandler;
 import org.pentaho.di.core.extension.KettleExtensionPoint;
 import org.pentaho.di.core.logging.LogChannel;
 import org.pentaho.di.core.logging.LogChannelInterface;
+import org.pentaho.di.core.util.Utils;
 import org.pentaho.di.i18n.BaseMessages;
 import org.pentaho.di.job.JobMeta;
 import org.pentaho.di.partition.PartitionSchema;
@@ -99,7 +100,9 @@ import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
 import org.pentaho.platform.api.repository2.unified.RepositoryFile;
 import org.pentaho.platform.api.repository2.unified.RepositoryFileAcl;
 import org.pentaho.platform.api.repository2.unified.RepositoryFileTree;
+import org.pentaho.platform.api.repository2.unified.RepositoryRequest;
 import org.pentaho.platform.api.repository2.unified.VersionSummary;
+import org.pentaho.platform.api.repository2.unified.RepositoryRequest.FILES_TYPE_FILTER;
 import org.pentaho.platform.api.repository2.unified.data.node.DataNode;
 import org.pentaho.platform.api.repository2.unified.data.node.NodeRepositoryFileData;
 import org.pentaho.platform.repository.RepositoryFilenameUtils;
@@ -555,6 +558,74 @@ public class PurRepository extends AbstractRepository implements Repository, Rec
     return pur.getTree( path, -1, null, true );
   }
 
+  @Override
+  public RepositoryDirectoryInterface loadRepositoryDirectoryTree(
+      String path,
+      String filter,
+      int depth,
+      boolean showHidden,
+      boolean includeEmptyFolder,
+      boolean includeAcls )
+    throws KettleException {
+
+    //load count levels from root to destination path to load folder tree
+    int fromRootToDest = StringUtils.countMatches( path, "/" );
+    //create new root directory "/"
+    RepositoryDirectory dir = new RepositoryDirectory();
+    //fetch folder tree from root "/" to destination path for populate folder
+    RepositoryFileTree rootDirTree = loadRepositoryFileTree( "/", "*", fromRootToDest, showHidden, includeAcls, FILES_TYPE_FILTER.FOLDERS );
+    //populate directory by folder tree
+    fillRepositoryDirectoryFromTree( dir, rootDirTree );
+
+    RepositoryDirectoryInterface destinationDir = dir.findDirectory( path );
+    //search for goal path and filter
+    RepositoryFileTree repoTree = loadRepositoryFileTree( path, filter, depth, showHidden, includeAcls, FILES_TYPE_FILTER.FILES_FOLDERS );
+    //populate the directory with founded files and subdirectories with files
+    fillRepositoryDirectoryFromTree( destinationDir, repoTree );
+
+    if ( includeEmptyFolder ) {
+      RepositoryDirectoryInterface folders =
+          initRepositoryDirectoryTree(
+              loadRepositoryFileTree( path, null, depth, showHidden, includeAcls, FILES_TYPE_FILTER.FOLDERS ) );
+      return copyFrom( folders, destinationDir );
+    } else {
+      return destinationDir;
+    }
+  }
+
+  private RepositoryFileTree loadRepositoryFileTree(
+      String path,
+      String filter,
+      int depth,
+      boolean showHidden,
+      boolean includeAcls,
+      FILES_TYPE_FILTER types ) {
+    RepositoryRequest repoRequest = new RepositoryRequest();
+    repoRequest.setPath( Utils.isEmpty( path ) ? "/" : path );
+    repoRequest.setChildNodeFilter( filter == null ? "*" : filter );
+    repoRequest.setDepth( depth );
+    repoRequest.setShowHidden( showHidden );
+    repoRequest.setIncludeAcls( includeAcls );
+    repoRequest.setTypes( types == null ? FILES_TYPE_FILTER.FILES_FOLDERS : types );
+
+    RepositoryFileTree fileTree = pur.getTree( repoRequest );
+    return fileTree;
+  }
+
+  // copies repo objects into folder struct on left
+  private RepositoryDirectoryInterface copyFrom( RepositoryDirectoryInterface folders, RepositoryDirectoryInterface withFiles ) {
+    if ( folders.getName().equals( withFiles.getName() ) ) {
+      for ( RepositoryDirectoryInterface dir2 : withFiles.getChildren() ) {
+        for ( RepositoryDirectoryInterface dir1 : folders.getChildren() ) {
+          copyFrom( dir1, dir2 );
+        }
+      }
+      folders.setRepositoryObjects( withFiles.getRepositoryObjects() );
+    }
+    return folders;
+  }
+
+  @Deprecated
   @Override public RepositoryDirectoryInterface loadRepositoryDirectoryTree( boolean eager ) throws KettleException {
 
     // this method forces a reload of the repository directory tree structure
@@ -590,7 +661,7 @@ public class PurRepository extends AbstractRepository implements Repository, Rec
     RepositoryFile rootFolder = repoTree.getFile();
     RepositoryDirectory rootDir = new RepositoryDirectory();
     rootDir.setObjectId( new StringObjectId( rootFolder.getId().toString() ) );
-    loadRepositoryDirectory( rootDir, rootFolder, repoTree );
+    fillRepositoryDirectoryFromTree( rootDir, repoTree );
 
     // Example: /etc
     RepositoryDirectory etcDir = rootDir.findDirectory( ClientRepositoryPaths.getEtcFolderPath() );
@@ -611,7 +682,7 @@ public class PurRepository extends AbstractRepository implements Repository, Rec
     return newRoot;
   }
 
-  private void loadRepositoryDirectory( final RepositoryDirectoryInterface parentDir, final RepositoryFile folder,
+  private void fillRepositoryDirectoryFromTree( final RepositoryDirectoryInterface parentDir,
                                         final RepositoryFileTree treeNode ) throws KettleException {
     try {
       List<RepositoryElementMetaInterface> fileChildren = new ArrayList<RepositoryElementMetaInterface>();
@@ -622,7 +693,7 @@ public class PurRepository extends AbstractRepository implements Repository, Rec
             RepositoryDirectory dir = new RepositoryDirectory( parentDir, child.getFile().getName() );
             dir.setObjectId( new StringObjectId( child.getFile().getId().toString() ) );
             parentDir.addSubdirectory( dir );
-            loadRepositoryDirectory( dir, child.getFile(), child );
+            fillRepositoryDirectoryFromTree( dir, child );
           } else {
             // a real file, like a Transformation or Job
             RepositoryLock lock = unifiedRepositoryLockService.getLock( child.getFile() );

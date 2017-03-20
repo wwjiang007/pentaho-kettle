@@ -2,7 +2,7 @@
  *
  * Pentaho Data Integration
  *
- * Copyright (C) 2002-2013 by Pentaho : http://www.pentaho.com
+ * Copyright (C) 2002-2017 by Pentaho : http://www.pentaho.com
  *
  *******************************************************************************
  *
@@ -108,6 +108,7 @@ public class SelectDirectoryDialog extends Dialog {
     readOnly = rep.getSecurityProvider().isReadOnly();
   }
 
+  @SuppressWarnings( "deprecation" )
   public RepositoryDirectoryInterface open() {
     dircolor = GUIResource.getInstance().getColorDirectory();
 
@@ -128,10 +129,9 @@ public class SelectDirectoryDialog extends Dialog {
     props.setLook( wTree );
 
     try {
-      // We're terrible and load the entire repository, disable lazy loading if set
       if ( rep instanceof RepositoryExtended ) {
         RepositoryExtended repositoryExtended = (RepositoryExtended) this.rep;
-        repositoryTree = repositoryExtended.loadRepositoryDirectoryTree( true );
+        repositoryTree = repositoryExtended.loadRepositoryDirectoryTree(  "/", null, -1, true, true, false );
       } else {
         repositoryTree = this.rep.loadRepositoryDirectoryTree();
       }

@@ -19,15 +19,16 @@
 
     <!-- Kettle dependencies -->
     <dependency org="${ivy.artifact.group}"                name="kettle-core"          rev="${dependency.kettle.revision}"   changing="true"/>
+    <dependency org="org.pentaho"                          name="pdi-engine-api"       rev="${dependency.kettle.revision}"   changing="true"/>
 
     <!--  Pentaho (internal, non-Kettle) dependencies -->
     <dependency org="pentaho"                              name="pentaho-registry"                      rev="${dependency.pentaho-registry.revision}" changing="true" />
     <dependency org="pentaho"                              name="mondrian"                              rev="${dependency.mondrian.revision}" changing="true"/>
-    <dependency org="pentaho-library"                      name="libfonts"                              rev="${dependency.pentaho-reporting.revision}" changing="true" transitive="true"/>
+    <dependency org="org.pentaho.reporting.library"        name="libfonts"                              rev="${dependency.pentaho-reporting.revision}" changing="true" transitive="true"/>
     <dependency org="pentaho"                              name="metastore"                             rev="${dependency.pentaho-metastore.revision}" changing="true" transitive="false"/>
 
     <!--  Pentaho reporting dependencies -->
-    <dependency org="${dependency.reporting-engine.group}" name="pentaho-reporting-engine-classic-core" rev="${dependency.pentaho-reporting.revision}" changing="true" transitive="true"/>
+    <dependency org="${dependency.reporting-engine.group}" name="classic-core" rev="${dependency.pentaho-reporting.revision}" changing="true" transitive="true"/>
 
     <!-- Third-party (external) dependencies -->
     <dependency org="org.antlr"                        name="antlr-complete"       rev="3.5.2"           transitive="false"/>
@@ -66,7 +67,7 @@
     <dependency org="net.sf.saxon"                     name="saxon-dom"            rev="9.1.0.8"         transitive="false"/>
     <dependency org="org.yaml"                         name="snakeyaml"            rev="1.7"             transitive="false"/>
     <dependency org="org.snmp4j"                       name="snmp4j"               rev="1.9.3d"          transitive="false"/>
-    <dependency org="org.syslog4j"                     name="syslog4j"             rev="0.9.34"          transitive="false"/>
+    <dependency org="org.syslog4j"                     name="syslog4j"             rev="0.9.46"          transitive="false"/>
     <dependency org="trilead-ssh2"                     name="trilead-ssh2"         rev="build213"        transitive="false"/>
     <dependency org="javax.xml"                        name="jaxrpc-api"           rev="1.1"             transitive="false"/>
     <dependency org="org.olap4j"                       name="olap4j"               rev="1.2.0"           transitive="false"/>

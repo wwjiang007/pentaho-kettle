@@ -2,7 +2,7 @@
  *
  * Pentaho Data Integration
  *
- * Copyright (C) 2002-2016 by Pentaho : http://www.pentaho.com
+ * Copyright (C) 2002-2017 by Pentaho : http://www.pentaho.com
  *
  *******************************************************************************
  *
@@ -75,6 +75,7 @@ public class ExpandedContentManagerTest {
     Control[] children = new Control[] { control1, control2, browser };
     when( transGraphMock.getChildren() ).thenReturn( children );
     ExpandedContentManager.createExpandedContent( transGraphMock, "" );
+    verify( browser ).setUrl( "" );
   }
 
   @Test
@@ -86,7 +87,7 @@ public class ExpandedContentManagerTest {
     Composite parent = setupExpandedContentMocks( transGraph, browser, sashForm );
     ExpandedContentManager.hideExpandedContent( transGraph );
     verify( browser ).moveBelow( null );
-    verify( parent ).layout( true );
+    verify( parent ).layout( true, true );
     verify( parent ).redraw();
     verify( sashForm ).setWeights( new int[] { 3, 2, 1 } );
   }

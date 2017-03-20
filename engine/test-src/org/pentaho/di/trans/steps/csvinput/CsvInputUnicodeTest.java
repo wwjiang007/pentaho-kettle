@@ -2,7 +2,7 @@
  *
  * Pentaho Data Integration
  *
- * Copyright (C) 2002-2016 by Pentaho : http://www.pentaho.com
+ * Copyright (C) 2002-2017 by Pentaho : http://www.pentaho.com
  *
  *******************************************************************************
  *
@@ -22,9 +22,9 @@
 
 package org.pentaho.di.trans.steps.csvinput;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.when;
+import org.junit.Assert;
+import org.mockito.Matchers;
+import org.mockito.Mockito;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -46,12 +46,15 @@ public class CsvInputUnicodeTest extends CsvInputUnitTestBase {
   private static final String UTF8 = "UTF-8";
   private static final String UTF16LE = "UTF-16LE";
   private static final String UTF16LEBOM = "x-UTF-16LE-BOM";
-  private static final String UTF16BE = "UTF-16LE";
+  private static final String UTF16BE = "UTF-16BE";
   private static final String ONE_CHAR_DELIM = "\t";
   private static final String MULTI_CHAR_DELIM = "|||";
   private static final String TEXT = "Header1%1$sHeader2\nValue%1$sValue\nValue%1$sValue\n";
+  private static final String TEXT_WITH_ENCLOSURES = "Header1%1$sHeader2\n\"Value\"%1$s\"Value\"\n\"Value\"%1$s\"Value\"\n";
   private static final String TEST_DATA = String.format( TEXT, ONE_CHAR_DELIM );
   private static final String TEST_DATA1 = String.format( TEXT, MULTI_CHAR_DELIM );
+  private static final String TEST_DATA2 = String.format( TEXT_WITH_ENCLOSURES, ONE_CHAR_DELIM );
+  private static final String TEST_DATA3 = String.format( TEXT_WITH_ENCLOSURES, MULTI_CHAR_DELIM );
 
   private static StepMockHelper<?, ?> stepMockHelper;
 
@@ -59,9 +62,9 @@ public class CsvInputUnicodeTest extends CsvInputUnitTestBase {
   public static void setUp() throws KettleException {
     stepMockHelper =
       new StepMockHelper<CsvInputMeta, CsvInputData>( "CsvInputTest", CsvInputMeta.class, CsvInputData.class );
-    when( stepMockHelper.logChannelInterfaceFactory.create( any(), any( LoggingObjectInterface.class ) ) )
+    Mockito.when( stepMockHelper.logChannelInterfaceFactory.create( Matchers.any(), Matchers.any( LoggingObjectInterface.class ) ) )
       .thenReturn( stepMockHelper.logChannelInterface );
-    when( stepMockHelper.trans.isRunning() ).thenReturn( true );
+    Mockito.when( stepMockHelper.trans.isRunning() ).thenReturn( true );
   }
 
   @Test
@@ -94,6 +97,36 @@ public class CsvInputUnicodeTest extends CsvInputUnitTestBase {
     doTest( UTF8, UTF8, TEST_DATA1, MULTI_CHAR_DELIM );
   }
 
+  @Test
+  public void testUTF16LEDataWithEnclosures() throws Exception {
+    doTest( UTF16LE, UTF16LE, TEST_DATA2, ONE_CHAR_DELIM );
+  }
+
+  @Test
+  public void testUTF16BEDataWithEnclosures() throws Exception {
+    doTest( UTF16BE, UTF16BE, TEST_DATA2, ONE_CHAR_DELIM );
+  }
+
+  @Test
+  public void testUTF16LEBOMDataWithEnclosures() throws Exception {
+    doTest( UTF16LEBOM, UTF16LE, TEST_DATA2, ONE_CHAR_DELIM );
+  }
+
+  @Test
+  public void testUTF16BE_multiDelim_DataWithEnclosures() throws Exception {
+    doTest( UTF16BE, UTF16BE, TEST_DATA3, MULTI_CHAR_DELIM );
+  }
+
+  @Test
+  public void testUTF16LE_multiDelim_DataWithEnclosures() throws Exception {
+    doTest( UTF16LE, UTF16LE, TEST_DATA3, MULTI_CHAR_DELIM );
+  }
+
+  @Test
+  public void testUTF8_multiDelim_DataWithEnclosures() throws Exception {
+    doTest( UTF8, UTF8, TEST_DATA3, MULTI_CHAR_DELIM );
+  }
+
   private void doTest( final String fileEncoding, final String stepEncoding, final String testData,
     final String delimiter ) throws Exception {
     String testFilePath = createTestFile( fileEncoding, testData ).getAbsolutePath();
@@ -111,7 +144,7 @@ public class CsvInputUnicodeTest extends CsvInputUnitTestBase {
       @Override
       public void rowWrittenEvent( RowMetaInterface rowMeta, Object[] row ) throws KettleStepException {
         for ( int i = 0; i < rowMeta.size(); i++ ) {
-          assertEquals( "Value", row[ i ] );
+          Assert.assertEquals( "Value", row[ i ] );
         }
       }
     } );
@@ -122,7 +155,7 @@ public class CsvInputUnicodeTest extends CsvInputUnitTestBase {
     } while ( !haveRowsToRead );
 
     csvInput.dispose( meta, data );
-    assertEquals( 2, csvInput.getLinesWritten() );
+    Assert.assertEquals( 2, csvInput.getLinesWritten() );
   }
 
   private CsvInputMeta createStepMeta( final String testFilePath, final String encoding, final String delimiter ) {

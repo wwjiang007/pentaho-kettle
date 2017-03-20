@@ -2,7 +2,7 @@
  *
  * Pentaho Data Integration
  *
- * Copyright (C) 2002-2016 by Pentaho : http://www.pentaho.com
+ * Copyright (C) 2002-2017 by Pentaho : http://www.pentaho.com
  *
  *******************************************************************************
  *
@@ -526,6 +526,12 @@ public class ValueMetaBaseTest {
     assertEquals( -1, intMeta.compare( int2, int1 ) );
     assertEquals( 0, intMeta.compare( int1, int1 ) );
 
+    int1 = null;
+    int2 = new Long( 6223372036854775804L );
+    assertEquals( -1, intMeta.compare( int1, int2 ) );
+    intMeta.setSortedDescending( true );
+    assertEquals( 1, intMeta.compare( int1, int2 ) );
+
   }
 
   @Test
@@ -557,6 +563,16 @@ public class ValueMetaBaseTest {
     assertEquals( local( 1918, 3, 25, 0, 0, 0, 0 ), dateMeta.convertStringToDate( "1918-03-25" ) );
     // convert date with spaces at the end
     assertEquals( local( 1918, 3, 25, 0, 0, 0, 0 ), dateMeta.convertStringToDate( "1918-03-25  \n" ) );
+  }
+
+  @Test
+  public void testDateToStringParse() throws Exception {
+    ValueMetaBase dateMeta = new ValueMetaString( "date" );
+    dateMeta.setDateFormatLenient( false );
+
+    // try to convert date by 'start-of-date' make - old behavior
+    dateMeta.setConversionMask( "yyyy-MM-dd" );
+    assertEquals( local( 1918, 3, 25, 0, 0, 0, 0 ), dateMeta.convertStringToDate( "1918-03-25T07:40:03.012+03:00" ) );
   }
 
   @Test
@@ -734,5 +750,19 @@ public class ValueMetaBaseTest {
     public List<KettleLoggingEvent> getEvents() {
       return events;
     }
+  }
+
+  @Test
+  public void testConvertBigNumberToBoolean() {
+    ValueMetaBase vmb = new ValueMetaBase();
+    System.out.println( vmb.convertBigNumberToBoolean( new BigDecimal( "-234" ) ) );
+    System.out.println( vmb.convertBigNumberToBoolean( new BigDecimal( "234" ) ) );
+    System.out.println( vmb.convertBigNumberToBoolean( new BigDecimal( "0" ) ) );
+    System.out.println( vmb.convertBigNumberToBoolean( new BigDecimal( "1.7976E308" ) ) );
+
+    Assert.assertTrue( vmb.convertBigNumberToBoolean( new BigDecimal( "-234" ) ) );
+    Assert.assertTrue( vmb.convertBigNumberToBoolean( new BigDecimal( "234" ) ) );
+    Assert.assertFalse( vmb.convertBigNumberToBoolean( new BigDecimal( "0" ) ) );
+    Assert.assertTrue( vmb.convertBigNumberToBoolean( new BigDecimal( "1.7976E308" ) ) );
   }
 }

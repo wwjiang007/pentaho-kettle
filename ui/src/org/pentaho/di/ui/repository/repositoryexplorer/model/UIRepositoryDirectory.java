@@ -2,7 +2,7 @@
  *
  * Pentaho Data Integration
  *
- * Copyright (C) 2002-2016 by Pentaho : http://www.pentaho.com
+ * Copyright (C) 2002-2017 by Pentaho : http://www.pentaho.com
  *
  *******************************************************************************
  *
@@ -33,7 +33,6 @@ import org.pentaho.di.repository.RepositoryDirectory;
 import org.pentaho.di.repository.RepositoryDirectoryInterface;
 import org.pentaho.di.repository.RepositoryElementMetaInterface;
 import org.pentaho.di.repository.RepositoryObjectType;
-import org.pentaho.di.repository.StringObjectId;
 
 public class UIRepositoryDirectory extends UIRepositoryObject {
 
@@ -117,11 +116,13 @@ public class UIRepositoryDirectory extends UIRepositoryObject {
       kidElementCache.add( child );
     }
 
-    List<? extends RepositoryElementMetaInterface> jobsAndTransformations = getDirectory().getRepositoryObjects();
-
-    if ( jobsAndTransformations == null || jobsAndTransformations.size() == 0 ) {
-      jobsAndTransformations = rep.getJobAndTransformationObjects( new StringObjectId( getId() ), false );
+    List<RepositoryElementMetaInterface> jobsAndTransformations = getDirectory().getRepositoryObjects();
+    if ( jobsAndTransformations == null ) {
+      RepositoryDirectoryInterface dir = getDirectory();
+      jobsAndTransformations = rep.getJobAndTransformationObjects( dir.getObjectId(), false );
+      dir.setRepositoryObjects( jobsAndTransformations );
     }
+
     for ( RepositoryElementMetaInterface child : jobsAndTransformations ) {
       if ( child.getObjectType().equals( RepositoryObjectType.TRANSFORMATION ) ) {
         try {

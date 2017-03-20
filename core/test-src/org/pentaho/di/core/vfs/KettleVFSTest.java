@@ -2,7 +2,7 @@
  *
  * Pentaho Data Integration
  *
- * Copyright (C) 2002-2015 by Pentaho : http://www.pentaho.com
+ * Copyright (C) 2002-2017 by Pentaho : http://www.pentaho.com
  *
  *******************************************************************************
  *
@@ -20,29 +20,25 @@
  *
  ******************************************************************************/
 
-package org.pentaho.di.ui.trans.steps.simplemapping;
+package org.pentaho.di.core.vfs;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import org.junit.Test;
-import org.pentaho.di.core.ObjectLocationSpecificationMethod;
-import org.pentaho.di.core.exception.KettleException;
 
-import static org.mockito.Mockito.*;
+public class KettleVFSTest {
 
-public class SimpleMappingDialogTest {
+  /**
+   * Test to validate that startsWitScheme() returns true if the fileName starts with
+   * known protocol like zip: jar: then it returns true else returns false
+   * @param fileName
+   */
+  @Test
+  public void testStartsWithScheme() {
+    String fileName = "zip:file:///SavedLinkedres.zip!Calculate median and percentiles using the group by steps.ktr";
+    assertTrue( KettleVFS.startsWithScheme( fileName ) );
 
-  @Test( expected = KettleException.class )
-  public void loadTransformation() throws KettleException {
-
-    SimpleMappingDialog simpleMappingDialog = mock( SimpleMappingDialog.class );
-
-    doCallRealMethod().when( simpleMappingDialog ).loadTransformation();
-
-    when( simpleMappingDialog.getReferenceObjectId() ).thenReturn( null );
-    when( simpleMappingDialog.getSpecificationMethod() ).thenReturn(
-      ObjectLocationSpecificationMethod.REPOSITORY_BY_REFERENCE );
-
-    simpleMappingDialog.loadTransformation();
-
+    fileName = "SavedLinkedres.zip!Calculate median and percentiles using the group by steps.ktr";
+    assertFalse( KettleVFS.startsWithScheme( fileName ) );
   }
-
 }

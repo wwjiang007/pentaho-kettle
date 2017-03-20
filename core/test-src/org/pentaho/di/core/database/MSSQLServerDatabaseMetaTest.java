@@ -2,7 +2,7 @@
  *
  * Pentaho Data Integration
  *
- * Copyright (C) 2002-2016 by Pentaho : http://www.pentaho.com
+ * Copyright (C) 2002-2017 by Pentaho : http://www.pentaho.com
  *
  *******************************************************************************
  *
@@ -36,6 +36,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.core.row.value.ValueMetaBigNumber;
+import org.pentaho.di.core.row.value.ValueMetaBinary;
 import org.pentaho.di.core.row.value.ValueMetaBoolean;
 import org.pentaho.di.core.row.value.ValueMetaDate;
 import org.pentaho.di.core.row.value.ValueMetaInteger;
@@ -168,7 +169,7 @@ public class MSSQLServerDatabaseMetaTest {
     assertEquals( "insert into FOO(FOOVERSION) values (1)", nativeMeta.getSQLInsertAutoIncUnknownDimensionRow( "FOO", "FOOKEY", "FOOVERSION" ) );
     assertEquals( "SELECT NEXT VALUE FOR FOO", nativeMeta.getSQLNextSequenceValue( "FOO" ) );
     assertEquals( "SELECT current_value FROM sys.sequences WHERE name = 'FOO'", nativeMeta.getSQLCurrentSequenceValue( "FOO" ) );
-    assertEquals( "SELECT * FROM sys.sequences WHERE name = 'FOO'", nativeMeta.getSQLSequenceExists( "FOO" ) );
+    assertEquals( "SELECT 1 FROM sys.sequences WHERE name = 'FOO'", nativeMeta.getSQLSequenceExists( "FOO" ) );
     assertEquals( "SELECT name FROM sys.sequences", nativeMeta.getSQLListOfSequences() );
   }
 
@@ -207,7 +208,7 @@ public class MSSQLServerDatabaseMetaTest {
     assertEquals( "VARCHAR(15)",
         nativeMeta.getFieldDefinition( new ValueMetaString( "BAR", 15, 0 ), "", "", false, false, false ) );
 
-    assertEquals( "",
+    assertEquals( "FLOAT(53)",
         nativeMeta.getFieldDefinition( new ValueMetaNumber( "BAR", 10, -7 ), "", "", false, false, false ) ); // Bug here - invalid SQL
 
     assertEquals( "DECIMAL(22,7)",
@@ -229,7 +230,10 @@ public class MSSQLServerDatabaseMetaTest {
         nativeMeta.getFieldDefinition( new ValueMetaInteger( "BAR" ), "", "BAR", true, false, false ) );
     assertEquals( "BIGINT PRIMARY KEY",
         nativeMeta.getFieldDefinition( new ValueMetaNumber( "BAR" ), "", "BAR", false, false, false ) );
-
+    assertEquals( "VARBINARY(MAX)",
+        nativeMeta.getFieldDefinition( new ValueMetaBinary( ), "", "BAR", false, false, false ) );
+    assertEquals( "VARBINARY(MAX)",
+        nativeMeta.getFieldDefinition( new ValueMetaBinary( "BAR" ), "", "BAR", false, false, false ) );
   }
 
   private int rowCnt = 0;

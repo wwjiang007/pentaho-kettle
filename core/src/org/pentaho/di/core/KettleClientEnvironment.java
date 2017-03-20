@@ -25,6 +25,7 @@ package org.pentaho.di.core;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import org.pentaho.di.core.encryption.Encr;
@@ -39,6 +40,7 @@ import org.pentaho.di.core.logging.LoggingPluginType;
 import org.pentaho.di.core.plugins.DatabasePluginType;
 import org.pentaho.di.core.plugins.PluginInterface;
 import org.pentaho.di.core.plugins.PluginRegistry;
+import org.pentaho.di.core.plugins.PluginTypeInterface;
 import org.pentaho.di.core.row.value.ValueMetaPluginType;
 import org.pentaho.di.core.util.EnvUtil;
 import org.pentaho.di.i18n.BaseMessages;
@@ -59,12 +61,29 @@ public class KettleClientEnvironment {
   private static Boolean initialized;
 
   public enum ClientType {
-    SPOON, PAN, KITCHEN, CARTE, DI_SERVER
+    SPOON, PAN, KITCHEN, CARTE, DI_SERVER, OTHER;
+    public String getID(){
+      if( this != OTHER ) {
+        return this.name();
+      }
+      return instance.clientID;
+    }
   }
 
   private ClientType client;
+  // used when type is OTHER
+  private String clientID = null;
+
 
   public static synchronized void init() throws KettleException {
+    init( Arrays.asList( LoggingPluginType.getInstance(),
+      ValueMetaPluginType.getInstance(),
+      DatabasePluginType.getInstance(),
+      ExtensionPointPluginType.getInstance(),
+      TwoWayPasswordEncoderPluginType.getInstance() ) );
+  }
+
+  public static synchronized void init( List<PluginTypeInterface> pluginsToLoad ) throws KettleException {
     if ( initialized != null ) {
       return;
     }
@@ -90,14 +109,9 @@ public class KettleClientEnvironment {
       KettleLogStore.getAppender().addLoggingEventListener( new ConsoleLoggingEventListener() );
     }
 
-
-    // Load value meta data plugins
+    // Load plugins
     //
-    PluginRegistry.addPluginType( LoggingPluginType.getInstance() );
-    PluginRegistry.addPluginType( ValueMetaPluginType.getInstance() );
-    PluginRegistry.addPluginType( DatabasePluginType.getInstance() );
-    PluginRegistry.addPluginType( ExtensionPointPluginType.getInstance() );
-    PluginRegistry.addPluginType( TwoWayPasswordEncoderPluginType.getInstance() );
+    pluginsToLoad.forEach( PluginRegistry::addPluginType );
     PluginRegistry.init( true );
 
     List<PluginInterface> logginPlugins = PluginRegistry.getInstance().getPlugins( LoggingPluginType.class );
@@ -180,6 +194,14 @@ public class KettleClientEnvironment {
 
   public void setClient( ClientType client ) {
     this.client = client;
+  }
+
+  /**
+   * Set the Client ID which has significance when the ClientType == OTHER
+   * @param id
+   */
+  public void setClientID( String id ) {
+    this.clientID = id;
   }
 
   public ClientType getClient() {
