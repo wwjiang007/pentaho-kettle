@@ -3297,9 +3297,12 @@ public class Spoon extends ApplicationWindow implements AddUndoPositionInterface
 
   public boolean tabClose( TabItem item, boolean force ) {
     try {
-      return delegates.tabs.tabClose( item, force );
-    } catch ( KettleRepositoryLostException e ) {
-      handleRepositoryLost( e );
+      try {
+        return delegates.tabs.tabClose( item, force );
+      } catch ( KettleRepositoryLostException e ) {
+        handleRepositoryLost( e );
+        return delegates.tabs.tabClose( item, force );
+      }
     } catch ( Exception e ) {
       new ErrorDialog( shell, "Error", "Unexpected error closing tab!", e );
     }
@@ -4022,16 +4025,7 @@ public class Spoon extends ApplicationWindow implements AddUndoPositionInterface
                         new RepositoryExplorer( shell, rep, cb, Variables.getADefaultVariableSpace(),
                             sharedObjectSyncUtil );
                   } catch ( final KettleRepositoryLostException krle ) {
-                    shell.getDisplay().asyncExec( new Runnable() {
-                      @Override
-                      public void run() {
-                        new ErrorDialog(
-                            getShell(),
-                            BaseMessages.getString( PKG, "Spoon.Error" ),
-                            krle.getPrefaceMessage(),
-                            krle );
-                      }
-                    } );
+                    handleRepositoryLost( krle );
                     closeRepository();
                     return;
                   } finally {
@@ -4194,7 +4188,9 @@ public class Spoon extends ApplicationWindow implements AddUndoPositionInterface
       if ( shouldDisconnect ) {
         loadSessionInformation( null, false );
 
-        rep.disconnect();
+        if ( rep != null ) {
+          rep.disconnect();
+        }
         if ( metaStore.getMetaStoreList().size() > 1 ) {
           try {
             metaStore.getMetaStoreList().remove( 0 );
@@ -5168,7 +5164,7 @@ public class Spoon extends ApplicationWindow implements AddUndoPositionInterface
         }
       }
 
-      if ( answer && !Utils.isEmpty( meta.getName() ) ) {
+      if ( answer && !Utils.isEmpty( meta.getName() ) && rep != null ) {
 
         int response = SWT.YES;
 
@@ -6347,18 +6343,23 @@ public class Spoon extends ApplicationWindow implements AddUndoPositionInterface
 
     DatabasesCollector collector = new DatabasesCollector( meta, rep );
     try {
-      collector.collectDatabases();
+      try {
+        collector.collectDatabases();
+      } catch ( KettleException e ) {
+        if ( e.getCause() instanceof KettleRepositoryLostException ) {
+          handleRepositoryLost( (KettleRepositoryLostException) e.getCause() );
+          collector = new DatabasesCollector( meta, null );
+          collector.collectDatabases();
+        } else {
+          throw e;
+        }
+      }
     } catch ( KettleException e ) {
-      if ( e.getCause() instanceof KettleRepositoryLostException ) {
-        handleRepositoryLost( (KettleRepositoryLostException) e.getCause() );
-      } else {
-        new ErrorDialog( shell,
+      new ErrorDialog( shell,
           BaseMessages.getString( PKG, "Spoon.ErrorDialog.Title" ),
           BaseMessages.getString( PKG, "Spoon.ErrorDialog.ErrorFetchingFromRepo.DbConnections" ),
           e
         );
-      }
-      return;
     }
 
     for ( String dbName : collector.getDatabaseNames() ) {
@@ -6374,21 +6375,19 @@ public class Spoon extends ApplicationWindow implements AddUndoPositionInterface
     }
   }
 
-  private void handleRepositoryLost( KettleRepositoryLostException e ) {
-    if ( closeRepositoryLost( e ) ) {
-      setRepository( null );
-      SpoonPluginManager.getInstance().notifyLifecycleListeners( SpoonLifeCycleEvent.REPOSITORY_DISCONNECTED );
-      setShellText();
-      enableMenus();
-    }
+  public void handleRepositoryLost( KettleRepositoryLostException e ) {
+    setRepository( null );
+    warnRepositoryLost( e );
+    SpoonPluginManager.getInstance().notifyLifecycleListeners( SpoonLifeCycleEvent.REPOSITORY_DISCONNECTED );
+    setShellText();
+    enableMenus();
   }
 
-  private boolean closeRepositoryLost( KettleRepositoryLostException e ) {
-    MessageBox box = new MessageBox( shell, SWT.OK | SWT.CANCEL );
+  private void warnRepositoryLost( KettleRepositoryLostException e ) {
+    MessageBox box = new MessageBox( shell, SWT.OK | SWT.ICON_WARNING );
     box.setText( BaseMessages.getString( PKG, "System.Warning" ) );
     box.setMessage( e.getPrefaceMessage() );
-    int result = box.open();
-    return result == SWT.OK;
+    box.open();
   }
 
   private void refreshStepsSubtree( TreeItem tiRootName, TransMeta meta, GUIResource guiResource ) {
@@ -6539,7 +6538,7 @@ public class Spoon extends ApplicationWindow implements AddUndoPositionInterface
         continue;
       }
 
-      TreeItem tiSlave = createTreeItem( tiSlaveTitle, slaveServer.getName(), guiResource.getImageSlaveMedium() );
+      TreeItem tiSlave = createTreeItem( tiSlaveTitle, slaveServer.getName(), guiResource.getImageSlaveTree() );
       if ( slaveServer.isShared() ) {
         tiSlave.setFont( guiResource.getFontBold() );
       }
@@ -6825,7 +6824,11 @@ public class Spoon extends ApplicationWindow implements AddUndoPositionInterface
       filename = meta.getFilename();
       name = meta.getName();
       version = meta.getObjectRevision() == null ? null : meta.getObjectRevision().getName();
-      versioningEnabled = isVersionEnabled( rep, meta );
+      try {
+        versioningEnabled = isVersionEnabled( rep, meta );
+      } catch ( KettleRepositoryLostException krle ) {
+        handleRepositoryLost( krle );
+      }
     }
 
     String text = "";
@@ -9304,6 +9307,8 @@ public class Spoon extends ApplicationWindow implements AddUndoPositionInterface
         SpoonPluginManager.getInstance().notifyLifecycleListeners( SpoonLifeCycleEvent.SHUTDOWN );
         super.handleShellCloseEvent();
       }
+    } catch ( KettleRepositoryLostException e ) {
+      handleRepositoryLost( e );
     } catch ( Exception e ) {
       LogChannel.GENERAL.logError( "Error closing Spoon", e );
     }

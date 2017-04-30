@@ -747,6 +747,11 @@ public class SpoonTransformationDelegate extends SpoonDelegate {
       executionConfiguration = spoon.getTransExecutionConfiguration();
     }
 
+    // Set defaults so the run configuration can set it up correctly
+    executionConfiguration.setExecutingLocally( true );
+    executionConfiguration.setExecutingRemotely( false );
+    executionConfiguration.setExecutingClustered( false );
+
     // Set repository and safe mode information in both the exec config and the metadata
     transMeta.setRepository( spoon.rep );
     transMeta.setMetaStore( spoon.metaStore );
@@ -818,16 +823,6 @@ public class SpoonTransformationDelegate extends SpoonDelegate {
         //
         return;
       }
-    } else {
-      if ( transMeta.findFirstUsedClusterSchema() != null ) {
-        executionConfiguration.setExecutingLocally( false );
-        executionConfiguration.setExecutingRemotely( false );
-        executionConfiguration.setExecutingClustered( true );
-      } else {
-        executionConfiguration.setExecutingLocally( true );
-        executionConfiguration.setExecutingRemotely( false );
-        executionConfiguration.setExecutingClustered( false );
-      }
     }
 
     Object[] data = spoon.variables.getData();
@@ -862,6 +857,15 @@ public class SpoonTransformationDelegate extends SpoonDelegate {
       ExtensionPointHandler.callExtensionPoint( log, KettleExtensionPoint.SpoonTransMetaExecutionStart.id, transMeta );
       ExtensionPointHandler.callExtensionPoint( log, KettleExtensionPoint.SpoonTransExecutionConfiguration.id,
           executionConfiguration );
+
+      try {
+        ExtensionPointHandler.callExtensionPoint( log, KettleExtensionPoint.SpoonTransBeforeStart.id, new Object[] {
+          executionConfiguration, transMeta, transMeta
+        } );
+      } catch ( KettleException e ) {
+        log.logError( e.getMessage(), transMeta.getFilename() );
+        return;
+      }
 
       // Verify if there is at least one step specified to debug or preview...
       //

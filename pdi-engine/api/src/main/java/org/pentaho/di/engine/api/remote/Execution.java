@@ -43,9 +43,16 @@ import java.io.Serializable;
  */
 public interface Execution<T extends Serializable> extends Serializable, AutoCloseable {
   /**
-   * @return original request for this execution
+   * @return Retrieves the request associated with
+   * this Execution, null if it has already been claimed.
    */
   ExecutionRequest getRequest();
+
+
+  /**
+   * Releases a request for execution by another handler.
+   */
+  void releaseRequest();
 
   /**
    * Send an event back to the client. Events may be wrapped if additional serialization logic is needed.
@@ -56,6 +63,13 @@ public interface Execution<T extends Serializable> extends Serializable, AutoClo
    * @param event Serialized event data
    */
   void update( T event );
+
+  /**
+   * Communicate a failure.
+   *
+   * @param throwable
+   */
+  void closeExceptionally( ExecutionException throwable );
 
   /**
    * Open a stream for nosy clients to get live feedback.
